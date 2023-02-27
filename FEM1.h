@@ -148,10 +148,7 @@ double FEM<dim>::xi_at_node(unsigned int dealNode) {
 //Define basis functions
 template <int dim>
 double FEM<dim>::basis_function(unsigned int node, double xi) {
-    /*"basisFunctionOrder" defines the polynomial order of the basis function,
-      "node" specifies which node the basis function corresponds to,
-      "xi" is the point (in the bi-unit domain) where the function is being evaluated.
-      You need to calculate the value of the specified basis function and order at the given quadrature pt.*/
+
     double value = 1.; //Store the value of the basis function in this variable
 
 
@@ -161,10 +158,8 @@ double FEM<dim>::basis_function(unsigned int node, double xi) {
     }
 
     //std::cout << " Value : " << value << "   Value 1 :" << value1 << std::endl;
-      /*You can use the function "xi_at_node" (defined above) to get the value of xi (in the bi-unit domain)
-        at any node in the element - using deal.II's element node numbering pattern.*/
 
-        //EDIT
+
 
     return value;
 }
@@ -172,11 +167,7 @@ double FEM<dim>::basis_function(unsigned int node, double xi) {
 //Define basis function gradient
 template <int dim>
 double FEM<dim>::basis_gradient(unsigned int node, double xi) {
-    /*"basisFunctionOrder" defines the polynomial order of the basis function,
-      "node" specifies which node the basis function corresponds to,
-      "xi" is the point (in the bi-unit domain) where the function is being evaluated.
-      You need to calculate the value of the derivative of the specified basis function and order at the given quadrature pt.
-      Note that this is the derivative with respect to xi (not x)*/
+
 
     double value = 0.; //Store the value of the gradient of the basis function in this variable
 
@@ -250,35 +241,6 @@ double FEM<dim>::basis_gradient(unsigned int node, double xi) {
         value = (xi - xi2) * (xi - xi3) / denum + (xi - xi1) * (xi - xi3) / denum + (xi - xi1) * (xi - xi2) / denum;
     }
 
-    //  value=1.;
-    //  // Calculate lagrange polynomial
-    //  for (int i = 0; i <= basisFunctionOrder ; i ++)
-    //  {
-    //      if(i!=node)
-    //      {
-    //          value = value * (xi - xi_at_node(i)) / (xi_at_node(node) - xi_at_node(i));
-    //      }
-    //  }
-
-    //  // Calculate gradient
-    //  double sum=0;
-    //  for (int i = 0; i <= basisFunctionOrder ; i ++)
-    //  {
-    //      if(i!=node)
-    //      {
-    //         sum += 1./ (xi - xi_at_node(i));
-    //      }
-    //  }
-
-
-
-
-
-      /*You can use the function "xi_at_node" (defined above) to get the value of xi (in the bi-unit domain)
-        at any node in the element - using deal.II's element node numbering pattern.*/
-
-        //EDIT
-
     return value;
 }
 
@@ -287,7 +249,7 @@ template <int dim>
 void FEM<dim>::generate_mesh(unsigned int numberOfElements) {
 
     //Define the limits of your domain
-    L = 0.1; //EDIT
+    L = 0.1; 
     double x_min = 0.;
     double x_max = L;
 
@@ -305,14 +267,7 @@ void FEM<dim>::define_boundary_conds() {
     //Identify dirichlet boundary nodes and specify their values.
     //This function is called from within "setup_system"
 
-    /*The vector "nodeLocation" gives the x-coordinate in the real domain of each node,
-      organized by the global node number.*/
 
-      /*This loops through all nodes in the system and checks to see if they are
-        at one of the boundaries. If at a Dirichlet boundary, it stores the node number
-        and the applied displacement value in the std::map "boundary_values". Deal.II
-        will use this information later to apply Dirichlet boundary conditions.
-        Neumann boundary conditions are applied when constructing Flocal in "assembly"*/
     for (unsigned int globalNode = 0; globalNode < totalNodes; globalNode++) {
         if (nodeLocation[globalNode] == 0) {
             boundary_values[globalNode] = g1;
@@ -362,13 +317,9 @@ void FEM<dim>::setup_system() {
     D.reinit(dof_handler.n_dofs());
 
     //Define quadrature rule
-    //Define quadrature rule
-  /*A quad rule of 2 is included here as an example. You will need to decide
-    what quadrature rule is needed for the given problems*/
-
 
     if (basisFunctionOrder == 1) {  //quadRule - n_int=4 for linear basis functions
-        quadRule = 4; //EDIT - Number of quadrature points along one dimension 
+        quadRule = 4; // - Number of quadrature points along one dimension 
         //
         quad_points.resize(quadRule); quad_weight.resize(quadRule);
 
@@ -458,15 +409,9 @@ void FEM<dim>::assemble_system() {
         endc = dof_handler.end();
     for (; elem != endc; ++elem) {
 
-        /*Retrieve the effective "connectivity matrix" for this element
-          "local_dof_indices" relates local dofs to global dofs,
-          i.e. local_dof_indices[i] gives the global dof number for local dof i.*/
+ 
         elem->get_dof_indices(local_dof_indices);
 
-        /*We find the element length by subtracting the x-coordinates of the two end nodes
-          of the element. Remember that the vector "nodeLocation" holds the x-coordinates, indexed
-          by the global node number. "local_dof_indices" gives us the global node number indexed by
-          the element node number.*/
         h_e = nodeLocation[local_dof_indices[1]] - nodeLocation[local_dof_indices[0]];
 
         //Loop over local DOFs and quadrature points to populate Flocal and Klocal.
@@ -504,7 +449,7 @@ void FEM<dim>::assemble_system() {
             {
                 for (unsigned int q = 0; q < quadRule; q++)
                 {
-                    //EDIT - Define Klocal.
+                    // - Define Klocal.
                     Klocal[A][B] += 2. / h_e * basis_gradient(A, quad_points[q]) * basis_gradient(B, quad_points[q]) * quad_weight[q];
                 }
             }
@@ -515,16 +460,13 @@ void FEM<dim>::assemble_system() {
         for (unsigned int A = 0; A < dofs_per_elem; A++)
         {
 
-            //EDIT - add component A of Flocal to the correct location in F
-            /*Remember, local_dof_indices[A] is the global degree-of-freedom number
-          corresponding to element node number A*/
+            //  add component A of Flocal to the correct location in F
+
             F[local_dof_indices[A]] += Flocal[A];
             for (unsigned int B = 0; B < dofs_per_elem; B++)
             {
-                //EDIT - add component A,B of Klocal to the correct location in K (using local_dof_indices)
-                /*Note: K is a sparse matrix, so you need to use the function "add".
-                  For example, to add the variable C to K[i][j], you would use:
-                  K.add(i,j,C);*/
+                // add component A,B of Klocal to the correct location in K (using local_dof_indices)
+
                 K.add(local_dof_indices[A], local_dof_indices[B], Klocal[A][B]);
             }
         }
@@ -532,8 +474,7 @@ void FEM<dim>::assemble_system() {
     }
 
     //Apply Dirichlet boundary conditions
-    /*deal.II applies Dirichlet boundary conditions (using the boundary_values map we
-      defined in the function "define_boundary_conds") without resizing K or F*/
+
     MatrixTools::apply_boundary_values(boundary_values, K, D, F, false);
 }
 
@@ -604,8 +545,8 @@ double FEM<dim>::l2norm_of_error() {
 
             l2norm += (u_h - u_exact) * (u_h - u_exact) * h_e / 2. * quad_weight[q];
             //      std::cout << "x = " << x << "   u_exact = " << u_exact << "   uh=" << u_h << std::endl;
-                  //EDIT - Find the l2-norm of the error through numerical integration.
-                  /*This includes evaluating the exact solution at the quadrature points*/
+                  //Find the l2-norm of the error through numerical integration.
+
 
         }
     }
